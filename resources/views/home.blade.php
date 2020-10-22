@@ -150,6 +150,11 @@
             $(this).parents("tr").remove();
             $(".add-new").removeAttr("disabled");
         });
+        $(document).on("click","#btnThemsach",function(){
+          
+            $('#modalThemsach').modal('hide');
+            $('.modal-backdrop').hide();
+        });
     });
     </script>
 
@@ -216,7 +221,7 @@
                         <div class="modal-content">
                         <div class="modal-header text-center">
                             <h4 class="modal-title w-100 font-weight-bold">Nhập thông tin sách</h4>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" >
                             <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -287,7 +292,7 @@
 
                         </div>
                         <div class="modal-footer d-flex justify-content-center">
-                            <button class="btn btn-primary" id="themmoi">Thêm mới</button>
+                            <button class="btn btn-primary" id="btnThemsach">Thêm mới</button>
                         </div>
                         </div>
                     </div>
