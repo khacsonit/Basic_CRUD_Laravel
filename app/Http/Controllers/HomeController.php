@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Sach as Sach;
 use App\Models\Tacgia as Tacgia;
 use App\Models\Theloai as Theloai;
+use Facade\FlareClient\Http\Response;
+use Illuminate\Support\Facades\Redirect;
+
 class HomeController extends Controller
 {
     /**
@@ -42,7 +45,23 @@ class HomeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
+        $sach = new Sach();
+        $sach->TenSach = $request->tensach;
+        $sach->MoTa = $request->mota;
+        $sach->NamXb = $request->namxuatban;
+
+        $photo = $request->file('file');
+        $rand = rand() . '.' . $photo->getClientOriginalExtension();
+        $sach->Anh = 'images/' . $rand;
+        $photo->move(public_path('images'),$rand);
+
+        $sach->SoLuong = $request->soluong;
+        $sach->IdTacGia = $request->tacgia;
+        $sach->IdTheLoai = $request->theloai;
+        $sach->save();
+      
+        return Response()->json($sach);
     }
 
     /**

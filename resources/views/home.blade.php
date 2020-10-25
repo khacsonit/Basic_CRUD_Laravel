@@ -2,6 +2,10 @@
 
 @section('title', 'Danh mục sách')
 
+@section('meta')
+    <meta name="csrf-token" content="{{ csrf_token() }}" />    
+@endsection
+
 @section('jscss')
       {{-- //cho table --}}
 
@@ -100,7 +104,6 @@
     </style>
 <script>
     $(document).ready(function(){
-        $('[data-toggle="tooltip"]').tooltip();
         var actions = $("table td:last-child").html();
         // Append table with add row form on add new button click
         $(".add-new").click(function(){
@@ -139,11 +142,28 @@
         });
         // Edit row on edit button click
         $(document).on("click", ".edit", function(){		
-            $(this).parents("tr").find("td:not(:last-child)").each(function(){
-                $(this).html('<input type="text" class="form-control" value="' + $(this).text() + '">');
-            });		
-            $(this).parents("tr").find(".add, .edit").toggle();
-            $(".add-new").attr("disabled", "disabled");
+            console.log($(this).parents().parents().attr('key'));	
+            var html = 
+            "<div class='modal'  role='dialog' style='position: absolute; tabindex:1'>"+
+            "<div class='modal-dialog' role='document'>"+
+            "    <div class='modal-content'>"+
+            "    <div class='modal-header'>"+
+            "        <h5 class='modal-title'>Modal title</h5>"+
+            "        <button type='button' class='close' data-dismiss='modal' aria-label='Close'>"+
+            "        <span aria-hidden='true'>&times;</span>"+
+            "        </button>"+
+            "    </div>"+
+            "    <div class='modal-body'>"+
+            "        <p>Modal body text goes here.</p>"+
+            "    </div>"+
+            "    <div class='modal-footer'>"+
+            "        <button type='button' class='btn btn-primary'>Save changes</button>"+
+            "        <button type='button' class='btn btn-secondary' data-dismiss='modal'>Close</button>"+
+            "    </div>"+
+            "    </div>"+
+            "</div>"+
+            "</div>";
+            $('.table-responsive').prepend(html);
         });
         // Delete row on delete button click
         $(document).on("click", ".delete", function(){
@@ -151,9 +171,78 @@
             $(".add-new").removeAttr("disabled");
         });
         $(document).on("click","#btnThemsach",function(){
-          
+            
             $('#modalThemsach').modal('hide');
             $('.modal-backdrop').hide();
+            
+
+        });
+        $('#upload_form').on('submit',function(e){
+            e.preventDefault();
+            var formdata = new FormData(this);
+            formdata.append('tensach',$('#tensach').val());
+            formdata.append('mota',$('#mota').val());
+            formdata.append('namxuatban',$('#namxuatban').val());
+            formdata.append('file',$('#file').val());
+            formdata.append('soluong',$('#soluong').val());
+            formdata.append('tacgia',$('#tacgia').val());
+            formdata.append('theloai',$('#theloai').val());
+
+            $.ajaxSetup({
+                headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            }
+            });
+            $.ajax({
+                url: "{{url('sach/themmoi')}}",
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                data: formdata,
+                dataType: 'JSON',
+                cache: false,
+                success: function(result){
+                    var ht = "<tr key='"+result.id+"'>"+ 
+                        "<td>"+result.TenSach+"</td> "+
+                        "<td>"+result.MoTa+"</td>"+
+                        "<td>"+result.NamXb+"</td> "+
+                        "<td><img src='"+result.Anh+"' style='width: 200px;height: 300px;'/></td>"+
+                        "<td>"+result.SoLuong+"</td> " +
+                        "<td>"+
+                            "<a class='add' title='Add' data-toggle='tooltip'><i class='material-icons'>&#xE03B;</i></a>"+
+                            "<a class='edit' title='Edit' data-toggle='tooltip'><i class='material-icons'>&#xE254;</i></a>"+
+                            "<a class='delete' title='Delete' data-toggle='tooltip'><i class='material-icons'>&#xE872;</i></a>"+
+                        "</td>"+
+                    "</tr>";
+                    $("table").append(ht);
+
+                    var toast = 
+                    "<div class='toast' data-delay='7000' style='position: absolute;top: 25px; right: 5px;'>"+
+                    "<div class='toast-header'>"+
+                    "  Thông báo"+
+                    "</div>"+
+                    "<div class='toast-body'>"+
+                    "Thêm sách thành công"+
+                    "</div>"+
+                    "</div>";
+                    $('.table-responsive').prepend(toast);
+                    $('.toast').toast('show');
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    var toast = 
+                    "<div class='toast' data-delay='7000' style='position: absolute;top: 25px; right: 5px;'>"+
+                    "<div class='toast-header'>"+
+                    "  Thông báo"+
+                    "</div>"+
+                    "<div class='toast-body'>"+
+                    "Không thể thêm sách!<br/>"+
+                    "Vui lòng thử lại."+
+                    "</div>"+
+                    "</div>";
+                    $('.table-responsive').prepend(toast);
+                    $('.toast').toast('show');
+                }
+            });
         });
     });
     </script>
@@ -199,7 +288,7 @@
                                     <td>{{$item->TenSach}}</td>
                                     <td>{{$item->MoTa}}</td>
                                     <td>{{$item->NamXb}}</td>
-                                    <td>{{$item->Anh}}</td>
+                                    <td><img src="{{$item->Anh}}" style="width: 200px;height: 300px;"/></td>
                                     <td>{{$item->SoLuong}}</td>
                                     <td>
                                         <a class="add" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a>
@@ -215,89 +304,90 @@
                 </table>
 
                 {{-- form --}}
-                <div class="modal fade" id="modalThemsach" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                        <div class="modal-header text-center">
-                            <h4 class="modal-title w-100 font-weight-bold">Nhập thông tin sách</h4>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" >
-                            <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body mx-3">
-                            <div class="md-form mb-1">
-                            <i class="fas fa-envelope prefix grey-text"></i>
-                            <input type="text"  class="form-control ">
-                            <label >Tên sách</label>
+                <form method="POST" action="" enctype="multipart/form-data" id="upload_form">
+                    <div class="modal fade" id="modalThemsach" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                            <div class="modal-header text-center">
+                                <h4 class="modal-title w-100 font-weight-bold">Nhập thông tin sách</h4>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close" >
+                                <span aria-hidden="true">&times;</span>
+                                </button>
                             </div>
-
-                            <div class="md-form mb-1">
+                            <div class="modal-body mx-3">
+                                <div class="md-form mb-1">
                                 <i class="fas fa-envelope prefix grey-text"></i>
-                                <input type="text"  class="form-control ">
-                                <label >Mô tả</label>
-                            </div>
-
-                            <div class="md-form mb-1">
-                                <i class="fas fa-envelope prefix grey-text"></i>
-                                <input type="text"  class="form-control ">
-                                <label >Năm xuất bản</label>
-                            </div>
-
-                            <div class="md-form mb-1">
-                                <i class="fas fa-envelope prefix grey-text"></i>
-                                <div class="file-field">
-                                    <div class="btn btn-primary btn-sm float-left">
-                                      <span>Chọn ảnh</span>
-                                      <input type="file">
-                                    </div>
-                                   
+                                <input type="text" id="tensach" name="tensach" class="form-control ">
+                                <label >Tên sách</label>
                                 </div>
-                            </div>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <div class="md-form mb-1">
-                                <i class="fas fa-envelope prefix grey-text"></i>
-                                <input type="text"  class="form-control ">
-                                <label >Số lượng</label>
-                            </div>
+
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+                                    <input type="text" id="mota" name="mota" class="form-control ">
+                                    <label >Mô tả</label>
+                                </div>
+
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+                                    <input type="text" id="namxuatban" name="namxuatban"class="form-control ">
+                                    <label >Năm xuất bản</label>
+                                </div>
+
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+                                    <div class="file-field">
+                                        <div class="btn btn-primary btn-sm float-left">
+                                        <span>Chọn ảnh</span>
+                                        <input type="file" id="file" name="file">
+                                        </div>
+                                    
+                                    </div>
+                                </div>
+                                <br/>
+                                <br/>
+                                <br/>
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+                                    <input type="text" id="soluong" name="soluong" class="form-control ">
+                                    <label >Số lượng</label>
+                                </div>
+                                
                             
-                         
-                        
-                            <div class="md-form mb-1">
-                                <i class="fas fa-envelope prefix grey-text"></i>
+                            
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
 
-                                <select class="browser-default custom-select" id="tacgia" >
-                                    @if(count($tacgia)>0)
-                                        @foreach ($tacgia as $item)
-                                            <option value="{{$item->id}}">{{$item->TenTacGia}}</option>
-                                        @endforeach
-                                    @endif
-                                </select>
-                                <label >Tác giả</label>
+                                    <select class="browser-default custom-select" id="tacgia" name="tacgia" >
+                                        @if(count($tacgia)>0)
+                                            @foreach ($tacgia as $item)
+                                                <option value="{{$item->id}}">{{$item->TenTacGia}}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <label >Tác giả</label>
+                                </div>
+
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+                                    <select class="browser-default custom-select" id="theloai" name="theloai" >
+                                        @if(count($theloai)>0)
+                                            @foreach ($theloai as $item)
+                                                <option value="{{$item->id}}">{{$item->TenTheLoai}}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <label >Thể loại</label>
+                                </div>
+
                             </div>
-
-                            <div class="md-form mb-1">
-                                <i class="fas fa-envelope prefix grey-text"></i>
-                                <select class="browser-default custom-select" id="theloai" >
-                                    @if(count($theloai)>0)
-                                        @foreach ($theloai as $item)
-                                            <option value="{{$item->id}}">{{$item->TenTheLoai}}</option>
-                                        @endforeach
-                                    @endif
-                                </select>
-                                <label >Thể loại</label>
+                            <div class="modal-footer d-flex justify-content-center">
+                                <input type="submit" class="btn btn-primary" id="btnThemsach" value="Thêm mới" />
                             </div>
-
-                        </div>
-                        <div class="modal-footer d-flex justify-content-center">
-                            <button class="btn btn-primary" id="btnThemsach">Thêm mới</button>
-                        </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-
+                </form>
                 
                 {{--  --}}
             </div>

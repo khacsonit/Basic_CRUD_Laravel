@@ -8,7 +8,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="">
   <meta name="author" content="">
-
+  @section('meta')
+      
+  @show
   @section('jscss')
       
   @show
@@ -23,14 +25,13 @@
 
   <!-- Custom styles for this template-->
   <link href="{{ asset('css/sb-admin-2.min.css') }}" rel="stylesheet">
-
 </head>
 
 <body id="page-top">
 
   <!-- Page Wrapper -->
   <div id="wrapper">
-
+    
     <!-- Sidebar -->
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
@@ -133,7 +134,6 @@
 
       <!-- Main Content -->
       <div id="content">
-
         <!-- Topbar -->
         <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
 
@@ -210,6 +210,7 @@
         <div class="container-fluid">
             @section('content')
                 <!-- Page Heading -->
+               
                 <h1 class="h3 mb-4 text-gray-800">@yield('title')</h1>
             @show
         </div>

@@ -20,6 +20,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/sach',[HomeController::class,'index'] );
+Route::post('/sach/themmoi',[HomeController::class,'store'] )->name('routeThemSach');
 
 // use qlsach;
 // CREATE TABLE THELOAI(
