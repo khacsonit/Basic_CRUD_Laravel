@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\AuthorController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -19,9 +20,15 @@ Route::get('/', function () {
     // return DB::table('sach')->get();
 })->name('home');
 
-Route::get('/sach',[HomeController::class,'index'] );
-Route::post('/sach/themmoi',[HomeController::class,'store'] )->name('routeThemSach');
 
+Route::group(['prefix' => 'sach'], function () {
+    Route::get('', [HomeController::class, 'index']);
+    Route::post('themmoi', [HomeController::class, 'store'])->name('routeThemSach');
+    Route::get('xoasach', [HomeController::class, 'destroy']);
+    Route::get('laysach', [HomeController::class, 'show']);
+    Route::post('suasach', [HomeController::class, 'edit']);
+});
+Route::get('tacgia/{id}',[AuthorController::class,'showAuthor']); 
 // use qlsach;
 // CREATE TABLE THELOAI(
 // 	Id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,

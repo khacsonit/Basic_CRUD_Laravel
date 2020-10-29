@@ -9,4 +9,7 @@ class Tacgia extends Model
 {
     protected $table = 'tacgia';
     public $timestamps = FALSE;
+    public function sach(){
+        return $this->hasMany('App\Models\Sach','IdTacGia','id');
+    }
 }

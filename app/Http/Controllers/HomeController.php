@@ -8,6 +8,7 @@ use App\Models\Tacgia as Tacgia;
 use App\Models\Theloai as Theloai;
 use Facade\FlareClient\Http\Response;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\File;
 
 class HomeController extends Controller
 {
@@ -61,7 +62,10 @@ class HomeController extends Controller
         $sach->IdTheLoai = $request->theloai;
         $sach->save();
       
-        return Response()->json($sach);
+        return Response()->json(['sach' => $sach,
+                                'tacgia' => $sach->tacgia->TenTacGia,
+                                'theloai' => $sach->theloai->TenTheLoai
+        ]);
     }
 
     /**
@@ -70,9 +74,12 @@ class HomeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request)
     {
         //
+
+        $sach = Sach::find($request->id);
+        return $sach;
     }
 
     /**
@@ -81,9 +88,26 @@ class HomeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Request $request)
     {
-        //
+        $sach = Sach::find($request->id);
+        $srcImage = $sach->Anh;
+        File::delete($srcImage);
+
+        $sach->TenSach = $request->tensach;
+        $sach->MoTa = $request->mota;
+        $sach->NamXb = $request->namxuatban;
+
+        $photo = $request->file('file');
+        $rand = rand() . '.' . $photo->getClientOriginalExtension();
+        $sach->Anh = 'images/' . $rand;
+        $photo->move(public_path('images'),$rand);
+
+        $sach->SoLuong = $request->soluong;
+        $sach->IdTacGia = $request->tacgia;
+        $sach->IdTheLoai = $request->theloai;
+        $sach->save();
+        return true;
     }
 
     /**
@@ -104,8 +128,15 @@ class HomeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
         //
+        $id = $request->id;
+        $srcImage = $request->srcImage;
+        $sach = Sach::find($id);
+        $TenSach = $sach->TenSach;
+        $sach->delete();
+        File::delete($srcImage);
+        return $TenSach;
     }
 }

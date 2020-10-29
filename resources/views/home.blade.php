@@ -103,6 +103,7 @@
     
     </style>
 <script>
+    var idSachSua;
     $(document).ready(function(){
         var actions = $("table td:last-child").html();
         // Append table with add row form on add new button click
@@ -141,35 +142,141 @@
             }		
         });
         // Edit row on edit button click
-        $(document).on("click", ".edit", function(){		
-            console.log($(this).parents().parents().attr('key'));	
-            var html = 
-            "<div class='modal'  role='dialog' style='position: absolute; tabindex:1'>"+
-            "<div class='modal-dialog' role='document'>"+
-            "    <div class='modal-content'>"+
-            "    <div class='modal-header'>"+
-            "        <h5 class='modal-title'>Modal title</h5>"+
-            "        <button type='button' class='close' data-dismiss='modal' aria-label='Close'>"+
-            "        <span aria-hidden='true'>&times;</span>"+
-            "        </button>"+
-            "    </div>"+
-            "    <div class='modal-body'>"+
-            "        <p>Modal body text goes here.</p>"+
-            "    </div>"+
-            "    <div class='modal-footer'>"+
-            "        <button type='button' class='btn btn-primary'>Save changes</button>"+
-            "        <button type='button' class='btn btn-secondary' data-dismiss='modal'>Close</button>"+
-            "    </div>"+
-            "    </div>"+
-            "</div>"+
-            "</div>";
-            $('.table-responsive').prepend(html);
+        $(document).on("click", ".edit", function(){
+            
+
+            var tr = $(this).parents().parents();	
+            console.log(tr.attr('key'));
+            idSachSua = tr.attr('key');
+            $.ajaxSetup({
+                headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            }
+                });
+                $.ajax({
+                    url : "{{url('sach/laysach')}}",
+                    type: 'GET',
+                    cache: false,
+                    data: {
+                        id: tr.attr('key')
+                    },
+                    success: function(result){
+                        console.log(result);
+                        // console.log('Xóa thành công'+result);
+                        // var kq = "Xoá sách <b>"+result+"</b> thành công";
+                        // $('#thongBao').html(kq);
+                        // $('.toast').toast('show');  
+                        // window.location.href = "#page-top";
+                        $('#modalSuaSach').modal('show');
+                        $('#tensachs').val(result.TenSach);
+                        $('#motas').val(result.MoTa);
+                        $('#namxuatbans').val(result.NamXb);
+                        $('#soluongs').val(result.SoLuong);
+                        var idtacgia = "#tacgias option[value="+result.IdTacGia+"]";
+                        var idtheloai = "#theloais option[value="+result.IdTheLoai+"]";
+                        $(idtacgia).prop("selected", true);
+                        $(idtheloai).prop("selected", true);
+                        
+                        
+                        
+                    },
+                });
+
         });
         // Delete row on delete button click
         $(document).on("click", ".delete", function(){
-            $(this).parents("tr").remove();
-            $(".add-new").removeAttr("disabled");
+            var tr = $(this).parents().parents();		
+            console.log(tr.attr('key'));	
+            
+            var tenSach  = $(this).parents().parents().children().eq(0).text();
+            var imageSource  = $(this).parents().parents().children().eq(3).children().attr('src');
+            console.log($(this).parents().parents().children().eq(3).children().attr('src'));
+            $('#exampleModalLongTitle').html("Xóa sách "+tenSach+" ?");
+            $('#modalBody').html("<img src='"+ imageSource + "' style='height:80%;width:100%' />");
+            $('#modalYesNo').modal('show');
+
+            //action after confirm delete
+            var t = this;
+            $('#btnXacNhanXoa').on('click',function(){
+                $(t).parents("tr").remove();
+                $(".add-new").removeAttr("disabled");
+
+                $.ajaxSetup({
+                headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            }
+                });
+                $.ajax({
+                    url : "{{url('sach/xoasach')}}",
+                    type: 'GET',
+                    cache: false,
+                    data: {
+                        id: tr.attr('key'),
+                        srcImage: imageSource
+                    },
+                    success: function(result){
+                        console.log('Xóa thành công'+result);
+                        var kq = "Xoá sách <b>"+result+"</b> thành công";
+                        $('#thongBao').html(kq);
+                        $('.toast').toast('show');  
+                        window.location.href = "#page-top";
+                    },
+                });
+            });
+            
         });
+        
+        $('#edit_form').on('submit',function(e){
+            e.preventDefault();
+            var formdata = new FormData(this);
+            formdata.append('id',idSachSua);
+            formdata.append('tensach',$('#tensachs').val());
+            formdata.append('mota',$('#motas').val());
+            formdata.append('namxuatban',$('#namxuatbans').val());
+            formdata.append('file',$('#files').val());
+            formdata.append('soluong',$('#soluongs').val());
+            formdata.append('tacgia',$('#tacgias').val());
+            formdata.append('theloai',$('#theloais').val());
+
+            console.log();
+            $.ajaxSetup({
+                headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            }
+            });
+            $.ajax({
+                url: "{{url('sach/suasach')}}",
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                data: formdata,
+                dataType: 'JSON',
+                cache: false,
+                success: function(result){
+               
+                    var kq = "Cập nhật sách thành công";
+                    $('#thongBao').html(kq);
+                    $('.toast').toast('show');
+                    window.location.href = "#page-top";
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    
+                    var kq = "Không thể  cập nhật sách";
+                    $('#thongBao').html(kq);
+                    $('.toast').toast('show');
+                    window.location.href = "#page-top";
+                }
+            });
+        });
+        
+        $(document).on("click","#btnSuaSach",function(){
+            
+            $('#modalSuaSach').modal('hide');
+            $('.modal-backdrop').hide();
+            
+
+        });
+
         $(document).on("click","#btnThemsach",function(){
             
             $('#modalThemsach').modal('hide');
@@ -202,12 +309,15 @@
                 dataType: 'JSON',
                 cache: false,
                 success: function(result){
-                    var ht = "<tr key='"+result.id+"'>"+ 
-                        "<td>"+result.TenSach+"</td> "+
-                        "<td>"+result.MoTa+"</td>"+
-                        "<td>"+result.NamXb+"</td> "+
-                        "<td><img src='"+result.Anh+"' style='width: 200px;height: 300px;'/></td>"+
-                        "<td>"+result.SoLuong+"</td> " +
+                    console.log(result);
+                    var ht = "<tr key='"+result.sach.id+"'>"+ 
+                        "<td>"+result.sach.TenSach+"</td> "+
+                        "<td>"+result.sach.MoTa+"</td>"+
+                        "<td>"+result.sach.NamXb+"</td> "+
+                        "<td><img src='"+result.sach.Anh+"' style='width: 50px;height: 50px;'/></td>"+
+                        "<td>"+result.sach.SoLuong+"</td> " +
+                        "<td>"+result.theloai+"</td> " +
+                        "<td>"+result.tacgia+"</td> " +
                         "<td>"+
                             "<a class='add' title='Add' data-toggle='tooltip'><i class='material-icons'>&#xE03B;</i></a>"+
                             "<a class='edit' title='Edit' data-toggle='tooltip'><i class='material-icons'>&#xE254;</i></a>"+
@@ -216,31 +326,18 @@
                     "</tr>";
                     $("table").append(ht);
 
-                    var toast = 
-                    "<div class='toast' data-delay='7000' style='position: absolute;top: 25px; right: 5px;'>"+
-                    "<div class='toast-header'>"+
-                    "  Thông báo"+
-                    "</div>"+
-                    "<div class='toast-body'>"+
-                    "Thêm sách thành công"+
-                    "</div>"+
-                    "</div>";
-                    $('.table-responsive').prepend(toast);
+                    
+                    var kq = "Thêm sách <b>"+result.sach.TenSach+"</b> thành công";
+                    $('#thongBao').html(kq);
                     $('.toast').toast('show');
+                    window.location.href = "#page-top";
                 },
                 error: function (xhr, ajaxOptions, thrownError) {
-                    var toast = 
-                    "<div class='toast' data-delay='7000' style='position: absolute;top: 25px; right: 5px;'>"+
-                    "<div class='toast-header'>"+
-                    "  Thông báo"+
-                    "</div>"+
-                    "<div class='toast-body'>"+
-                    "Không thể thêm sách!<br/>"+
-                    "Vui lòng thử lại."+
-                    "</div>"+
-                    "</div>";
-                    $('.table-responsive').prepend(toast);
+                    
+                    var kq = "Không thể  thêm sách";
+                    $('#thongBao').html(kq);
                     $('.toast').toast('show');
+                    window.location.href = "#page-top";
                 }
             });
         });
@@ -256,6 +353,14 @@
 
     <div class="container-lg">
         <div class="table-responsive" style="width: 110%; margin-left: -3rem">
+            <div class='toast' data-delay='7000' style='position: absolute;top: 25px; right: 5px; width:500px; text-align:center'>
+                <div class='toast-header' >
+                 <h3> Thông báo</h3>
+                </div>
+                <div class='toast-body'>
+                <h4 id="thongBao"></h4>
+                </div>
+            </div>
             <div class="table-wrapper">
                 <div class="table-title">
                     <div class="row">
@@ -277,6 +382,8 @@
                             <th>Năm xuất bản</th>
                             <th>Ảnh</th>
                             <th>Số lượng</th>
+                            <th>Thể loại</th>
+                            <th>Tác giả</th>
                             <th>Actions</th>
                             
                         </tr>
@@ -288,8 +395,10 @@
                                     <td>{{$item->TenSach}}</td>
                                     <td>{{$item->MoTa}}</td>
                                     <td>{{$item->NamXb}}</td>
-                                    <td><img src="{{$item->Anh}}" style="width: 200px;height: 300px;"/></td>
+                                    <td><img src="{{$item->Anh}}" style="width: 50px;height: 50px;"/></td>
                                     <td>{{$item->SoLuong}}</td>
+                                    <td>{{$item->theloai->TenTheLoai}}</td>
+                                    <td>{{$item->tacgia->TenTacGia}}</td>
                                     <td>
                                         <a class="add" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a>
                                         <a class="edit" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a>
@@ -304,7 +413,7 @@
                 </table>
 
                 {{-- form --}}
-                <form method="POST" action="" enctype="multipart/form-data" id="upload_form">
+                <form method="GET" action="" enctype="multipart/form-data" id="upload_form">
                     <div class="modal fade" id="modalThemsach" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
                         aria-hidden="true">
                         <div class="modal-dialog" role="document">
@@ -389,6 +498,113 @@
                     </div>
                 </form>
                 
+                {{--  --}}
+                {{--  --}}
+                <form method="POST" action="" enctype="multipart/form-data" id="edit_form">
+                    <div class="modal fade" id="modalSuaSach" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                            <div class="modal-header text-center">
+                                <h4 class="modal-title w-100 font-weight-bold">Sửa sách</h4>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close" >
+                                <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body mx-3">
+                                <div class="md-form mb-1">
+                                <i class="fas fa-envelope prefix grey-text"></i>
+                                <input type="text" id="tensachs" name="tensach" class="form-control ">
+                                <label >Tên sách</label>
+                                </div>
+
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+                                    <input type="text" id="motas" name="mota" class="form-control ">
+                                    <label >Mô tả</label>
+                                </div>
+
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+                                    <input type="text" id="namxuatbans" name="namxuatban"class="form-control ">
+                                    <label >Năm xuất bản</label>
+                                </div>
+
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+                                    <div class="file-field">
+                                        <div class="btn btn-primary btn-sm float-left">
+                                        <span>Chọn ảnh</span>
+                                        <input type="file" id="files" name="file">
+                                        </div>
+                                    
+                                    </div>
+                                </div>
+                                <br/>
+                                <br/>
+                                <br/>
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+                                    <input type="text" id="soluongs" name="soluong" class="form-control ">
+                                    <label >Số lượng</label>
+                                </div>
+                                
+                            
+                            
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+
+                                    <select class="browser-default custom-select" id="tacgias" name="tacgia" >
+                                        @if(count($tacgia)>0)
+                                            @foreach ($tacgia as $item)
+                                                <option value="{{$item->id}}">{{$item->TenTacGia}}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <label >Tác giả</label>
+                                </div>
+
+                                <div class="md-form mb-1">
+                                    <i class="fas fa-envelope prefix grey-text"></i>
+                                    <select class="browser-default custom-select" id="theloais" name="theloai" >
+                                        @if(count($theloai)>0)
+                                            @foreach ($theloai as $item)
+                                                <option value="{{$item->id}}">{{$item->TenTheLoai}}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <label >Thể loại</label>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer d-flex justify-content-center">
+                                <input type="submit" class="btn btn-primary" id="btnSuaSach" value="Cập nhật" />
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                {{--  --}}
+                <div id="modalYesNo" class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="exampleModalLongTitle"></h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body" id="modalBody">
+                          
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                          <button type="button" class="btn btn-primary" id="btnXacNhanXoa" data-dismiss="modal">Xác nhận</button>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+
                 {{--  --}}
             </div>
         </div>
