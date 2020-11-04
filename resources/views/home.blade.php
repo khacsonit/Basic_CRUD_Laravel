@@ -1,7 +1,5 @@
 @extends('layout')
 
-@section('title', 'Danh mục sách')
-
 @section('meta')
     <meta name="csrf-token" content="{{ csrf_token() }}" />    
 @endsection
@@ -226,6 +224,7 @@
             
         });
         
+        //Edit book
         $('#edit_form').on('submit',function(e){
             e.preventDefault();
             var formdata = new FormData(this);
@@ -277,6 +276,7 @@
 
         });
 
+        //add book
         $(document).on("click","#btnThemsach",function(){
             
             $('#modalThemsach').modal('hide');
@@ -314,7 +314,7 @@
                         "<td>"+result.sach.TenSach+"</td> "+
                         "<td>"+result.sach.MoTa+"</td>"+
                         "<td>"+result.sach.NamXb+"</td> "+
-                        "<td><img src='"+result.sach.Anh+"' style='width: 50px;height: 50px;'/></td>"+
+                        "<td><img src='"+result.sach.Anh+"' style='width: 125px;height: 150px;'/></td>"+
                         "<td>"+result.sach.SoLuong+"</td> " +
                         "<td>"+result.theloai+"</td> " +
                         "<td>"+result.tacgia+"</td> " +
@@ -341,6 +341,63 @@
                 }
             });
         });
+
+        //search books
+        $('#searchForm').on('submit',function(e){
+            e.preventDefault();
+        });
+
+        $('#searchText').focus(function(){
+            $('#btnHuyTim').css('display','block');
+        });
+        $('#btnHuyTim').on('click',function(){
+            location.reload(true);
+        });
+        $('#searchText').on('keyup',function(){
+        
+            $( "#btnActiveAdd" ).prop( "disabled", true );
+
+            var valu = $('#searchText').val();
+            $.ajaxSetup({
+                headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            }
+            });
+
+            $.ajax({
+                url : "{{url('sach/timsach')}}",
+                type: 'GET',
+                data: {value: valu},
+                success: function(result){
+                    console.log(result);
+                    $('#tbody').empty();
+                    if(result === ''){
+                        $("#titleTable").html("<h2>Không có kết quả tìm kiếm với sách<b> \""+valu+"\"</b></h2>");
+                    }else
+                    {
+                        $("#titleTable").html("<h2>Có <b>"+result.length+"</b> kết quả tìm kiếm với sách<b> \""+valu+"\"</b></h2>");
+                        for(var item of result){
+                            var ht = "<tr key='"+item.id+"'>"+ 
+                            "<td>"+item.TenSach+"</td> "+
+                            "<td>"+item.MoTa+"</td>"+
+                            "<td>"+item.NamXb+"</td> "+
+                            "<td><img src='"+item.Anh+"' style='width: 125px;height: 150px;'/></td>"+
+                            "<td>"+item.SoLuong+"</td> " +
+                            "<td>"+item.theloai+"</td> " +
+                            "<td>"+item.tacgia+"</td> " +
+                            "<td>"+
+                                "<a class='add' title='Add' data-toggle='tooltip'><i class='material-icons'>&#xE03B;</i></a>"+
+                                "<a class='edit' title='Edit' data-toggle='tooltip'><i class='material-icons'>&#xE254;</i></a>"+
+                                "<a class='delete' title='Delete' data-toggle='tooltip'><i class='material-icons'>&#xE872;</i></a>"+
+                            "</td>"+
+                            "</tr>";
+                            $("table").append(ht);
+                        }
+                    }
+                },
+            });
+
+        });
     });
     </script>
 
@@ -353,7 +410,7 @@
 
     <div class="container-lg">
         <div class="table-responsive" style="width: 110%; margin-left: -3rem">
-            <div class='toast' data-delay='7000' style='position: absolute;top: 25px; right: 5px; width:500px; text-align:center'>
+            <div class='toast' data-delay='7000' style='position: absolute;top: 10px; right: 500px; width:500px;height:120px; text-align:center'>
                 <div class='toast-header' >
                  <h3> Thông báo</h3>
                 </div>
@@ -364,11 +421,11 @@
             <div class="table-wrapper">
                 <div class="table-title">
                     <div class="row">
-                        <div class="col-sm-8"><h2>Bảng chi tiết <b>sách</b></h2></div>
+                        <div class="col-sm-8" id="titleTable"><h2>Bảng chi tiết <b>sách</b></h2></div>
                         <div class="col-sm-4">
                             <h2>
-                                <div class="text-center">
-                                    <a href="" class="btn btn-primary " data-toggle="modal" data-target="#modalThemsach">Thêm mới sách</a>
+                                <div class="text-center" >
+                                    <a href="" class="btn btn-primary " data-toggle="modal" data-target="#modalThemsach" id="btnActiveAdd" >Thêm mới sách</a>
                                 </div>
                             </h2>
                         </div>
@@ -388,14 +445,14 @@
                             
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="tbody">
                         @if(count($sach)>0)
                             @foreach ($sach as $item)
                                 <tr key="{{$item->id}}">
                                     <td>{{$item->TenSach}}</td>
                                     <td>{{$item->MoTa}}</td>
                                     <td>{{$item->NamXb}}</td>
-                                    <td><img src="{{$item->Anh}}" style="width: 50px;height: 50px;"/></td>
+                                    <td><img src="{{$item->Anh}}" style="width: 125px;height: 150px;"/></td>
                                     <td>{{$item->SoLuong}}</td>
                                     <td>{{$item->theloai->TenTheLoai}}</td>
                                     <td>{{$item->tacgia->TenTacGia}}</td>

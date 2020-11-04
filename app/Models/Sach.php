@@ -9,6 +9,7 @@ class Sach extends Model
 {
     protected $table = 'sach';
     public $timestamps = FALSE;
+
     public function tacgia(){
         return $this->belongsTo('App\Models\Tacgia','IdTacGia','id');
     }

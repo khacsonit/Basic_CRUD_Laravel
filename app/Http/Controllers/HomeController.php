@@ -9,6 +9,7 @@ use App\Models\Theloai as Theloai;
 use Facade\FlareClient\Http\Response;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -139,4 +140,23 @@ class HomeController extends Controller
         File::delete($srcImage);
         return $TenSach;
     }
+    public function searchBooks(Request $request){
+        $val = $request->value;
+        if($val == ''){
+            return false;
+        }
+        $sql ="SELECT * FROM sach WHERE MATCH(TenSach,MoTa) AGAINST ('".$val."')";
+        $kq = DB::select($sql);
+        if(sizeof($kq)==0)
+        return false;
+        for($i =0;$i<sizeof($kq); $i++){
+            $sach = Sach::find($kq[$i]->id);
+            $tentacgia = $sach->tacgia->TenTacGia;
+            $tentheloai  = $sach->theloai->TenTheLoai;
+            $kq[$i] = (object) array_merge( (array)$kq[$i], array( 'tacgia' => $tentacgia  ),array( 'theloai' => $tentheloai ) );
+        }
+        
+        return Response()->json($kq);
+    }
+
 }

@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthorController;
+use Illuminate\Support\Facades\Redirect;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,17 +18,16 @@ use App\Http\Controllers\AuthorController;
 */
 
 Route::get('/', function () {
-    return view('home');
-    // return DB::table('sach')->get();
+    return redirect()->route('sach');
 })->name('home');
 
-
 Route::group(['prefix' => 'sach'], function () {
-    Route::get('', [HomeController::class, 'index']);
+    Route::get('', [HomeController::class, 'index'])->name('sach');
     Route::post('themmoi', [HomeController::class, 'store'])->name('routeThemSach');
     Route::get('xoasach', [HomeController::class, 'destroy']);
     Route::get('laysach', [HomeController::class, 'show']);
     Route::post('suasach', [HomeController::class, 'edit']);
+    Route::get('timsach', [HomeController::class, 'searchBooks'])->name('search');
 });
 Route::get('tacgia/{id}',[AuthorController::class,'showAuthor']); 
 // use qlsach;
@@ -53,3 +54,4 @@ Route::get('tacgia/{id}',[AuthorController::class,'showAuthor']);
 //     FOREIGN KEY (IdTacGia) REFERENCES TACGIA(Id),
 //     FOREIGN KEY (IdTheLoai) REFERENCES THELOAI(Id)
 // );
+// alter TABLE sach ADD FULLTEXT (TenSach,MoTa)
